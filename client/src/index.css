@@ -1,0 +1,104 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300&family=Fira+Code:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-primary-50: #f0f5ff;
+  --color-primary-100: #e0eaff;
+  --color-primary-200: #c7d7ff;
+  --color-primary-300: #a3bcff;
+  --color-primary-400: #7a97ff;
+  --color-primary-500: #4f6bff;
+  --color-primary-600: #3b4feb;
+  --color-primary-700: #2f3dd4;
+  --color-primary-800: #2732ac;
+  --color-primary-900: #232d8a;
+  --color-primary-950: #151954;
+
+  --color-dark-50: #f6f6f7;
+  --color-dark-100: #ebeeef;
+  --color-dark-200: #d3dae0;
+  --color-dark-300: #adc0cd;
+  --color-dark-400: #7f9eb3;
+  --color-dark-500: #5e7f97;
+  --color-dark-600: #4b677d;
+  --color-dark-700: #3e5466;
+  --color-dark-800: #344757;
+  --color-dark-900: #111827;
+  --color-dark-950: #030712;
+
+  --font-sans: 'Inter', sans-serif;
+  --font-outfit: 'Outfit', sans-serif;
+  --font-serif: 'Merriweather', serif;
+  --font-mono: 'Fira Code', monospace;
+
+  --shadow-glass-light: 0 8px 32px 0 rgba(31, 38, 135, 0.08);
+  --shadow-glass-dark: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  --shadow-glow-primary: 0 0 15px rgba(79, 107, 255, 0.4);
+}
+
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-900 transition-colors duration-300 font-sans antialiased overflow-x-hidden;
+  }
+  
+  body.dark {
+    @apply bg-dark-950 text-slate-100;
+  }
+}
+
+/* Custom design components and glassmorphic utilities using Tailwind v4 @utility syntax */
+@utility glass-card {
+  @apply bg-white/60 dark:bg-dark-900/60 backdrop-blur-md border border-white/20 dark:border-white/5 shadow-glass-light dark:shadow-glass-dark;
+}
+
+@utility glass-card-hover {
+  @apply transition-all duration-300 hover:shadow-lg hover:border-primary-500/30 dark:hover:border-primary-500/30;
+}
+
+@utility glass-input {
+  @apply w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white/40 dark:bg-dark-900/40 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 transition-all text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500;
+}
+
+@utility btn-primary {
+  @apply px-5 py-2.5 rounded-lg font-medium text-white bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 shadow-md shadow-primary-500/20 hover:shadow-lg hover:shadow-primary-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200;
+}
+
+@utility btn-secondary {
+  @apply px-5 py-2.5 rounded-lg font-medium text-slate-700 dark:text-slate-200 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 border border-slate-200/50 dark:border-slate-700/50;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-300 dark:bg-slate-800 rounded-full hover:bg-slate-400 dark:hover:bg-slate-700 transition-colors;
+}
+
+/* Premium Animations */
+@keyframes blob-float {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-20px) scale(1.05);
+  }
+}
+
+.animate-blob-float {
+  animation: blob-float 12s ease-in-out infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
