@@ -6,6 +6,10 @@ import {
   googleLogin,
   forgotPassword,
   resetPassword,
+  updateUserProfile,
+  updateUserPassword,
+  upgradeUserToPremium,
+  deleteUserAccount,
 } from '../controllers/authController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
@@ -18,6 +22,12 @@ router.post('/login', loginUser);
 router.post('/google-login', googleLogin);
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password/:token', resetPassword);
+
+// Protected routes
+router.put('/profile', protect, updateUserProfile);
+router.put('/password', protect, updateUserPassword);
+router.put('/upgrade', protect, upgradeUserToPremium);
+router.delete('/account', protect, deleteUserAccount);
 
 // Protected token verification route
 router.get('/me', protect, (req, res) => {

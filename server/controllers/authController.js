@@ -285,3 +285,131 @@ export const resetPassword = async (req, res, next) => {
     next(error);
   }
 };
+
+// @desc    Update user profile details
+// @route   PUT /api/v1/auth/profile
+// @access  Private
+export const updateUserProfile = async (req, res, next) => {
+  const { name, email } = req.body;
+  try {
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      res.status(404);
+      return next(new Error('User not found'));
+    }
+
+    // Check if email already taken by someone else
+    if (email && email !== user.email) {
+      const emailTaken = await User.findOne({ email });
+      if (emailTaken) {
+        res.status(400);
+        return next(new Error('Email is already in use by another account'));
+      }
+      user.email = email;
+    }
+
+    if (name) user.name = name;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        isVerified: user.isVerified,
+        isPremium: user.isPremium,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Update user password
+// @route   PUT /api/v1/auth/password
+// @access  Private
+export const updateUserPassword = async (req, res, next) => {
+  const { currentPassword, newPassword } = req.body;
+  try {
+    const user = await User.findById(req.user._id).select('+password');
+
+    if (!user) {
+      res.status(404);
+      return next(new Error('User not found'));
+    }
+
+    const isMatch = await user.matchPassword(currentPassword);
+    if (!isMatch) {
+      res.status(400);
+      return next(new Error('Current password is incorrect'));
+    }
+
+    user.password = newPassword; // Will be hashed in pre-save hook
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Password updated successfully!',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Upgrade user account to premium membership
+// @route   PUT /api/v1/auth/upgrade
+// @access  Private
+export const upgradeUserToPremium = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      res.status(404);
+      return next(new Error('User not found'));
+    }
+
+    user.isPremium = true;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Account successfully upgraded to Premium! Enjoy full templates and advanced AI.',
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        isVerified: user.isVerified,
+        isPremium: user.isPremium,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Delete user account and all their resumes
+// @route   DELETE /api/v1/auth/account
+// @access  Private
+export const deleteUserAccount = async (req, res, next) => {
+  try {
+    // Delete all resumes associated with this user
+    await import('../models/resumeModel.js').then(async (m) => {
+      await m.default.deleteMany({ userId: req.user._id });
+    });
+
+    // Delete user
+    await User.findByIdAndDelete(req.user._id);
+
+    res.status(200).json({
+      success: true,
+      message: 'Account and all saved resumes have been permanently deleted.',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+

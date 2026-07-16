@@ -10,6 +10,8 @@ import NotFound from './pages/NotFound';
 import VerifyEmail from './pages/VerifyEmail';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import ResumeBuilder from './pages/ResumeBuilder';
+import SharedResume from './pages/SharedResume';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -25,6 +27,7 @@ function App() {
             <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password/:token" element={<ResetPassword />} />
+            <Route path="/share/:id" element={<SharedResume />} />
 
             {/* User Protected Routes */}
             <Route
@@ -32,6 +35,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/builder/:id"
+              element={
+                <ProtectedRoute>
+                  <ResumeBuilder />
                 </ProtectedRoute>
               }
             />
