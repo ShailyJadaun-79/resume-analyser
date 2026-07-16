@@ -39,7 +39,7 @@ export const createResume = async (req, res, next) => {
 export const getMyResumes = async (req, res, next) => {
   try {
     const resumes = await Resume.find({ userId: req.user._id })
-      .select('title templateId atsScore isPublic updatedAt createdAt')
+      .select('title templateId atsScore isPublic isUploaded fileName fileType fileSize updatedAt createdAt')
       .sort({ updatedAt: -1 });
 
     res.status(200).json({

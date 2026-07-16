@@ -12,6 +12,7 @@ const ATSChecker = ({ user }) => {
 
   const [resumes, setResumes] = useState([]);
   const [selectedResumeId, setSelectedResumeId] = useState('');
+  const [currentResume, setCurrentResume] = useState(null);
   const [jobDescription, setJobDescription] = useState('');
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
@@ -24,7 +25,7 @@ const ATSChecker = ({ user }) => {
   const [tailoredText, setTailoredText] = useState('');
   const [copiedTailored, setCopiedTailored] = useState(false);
 
-  // Fetch resumes
+  // Fetch resumes list on mount
   useEffect(() => {
     const fetchResumes = async () => {
       try {
@@ -49,18 +50,15 @@ const ATSChecker = ({ user }) => {
     fetchResumes();
   }, [queryResumeId]);
 
-  // Auto-run analysis if navigated from dashboard upload trigger
+  // Auto-run analysis when selected resume changes
   useEffect(() => {
-    if (selectedResumeId && queryResumeId && selectedResumeId === queryResumeId && resumes.length > 0) {
+    if (selectedResumeId && resumes.length > 0) {
       handleRunAnalysis();
     }
-  }, [selectedResumeId, resumes]);
+  }, [selectedResumeId, resumes.length]);
 
   const handleRunAnalysis = async () => {
-    if (!selectedResumeId) {
-      alert('Please create or select a resume first!');
-      return;
-    }
+    if (!selectedResumeId) return;
 
     setLoading(true);
     setError(null);
@@ -69,9 +67,10 @@ const ATSChecker = ({ user }) => {
     setTailoredText('');
 
     try {
-      // 1. Fetch resume details
+      // 1. Fetch resume details (resolves all fields)
       const resumeRes = await API.get(`/resumes/${selectedResumeId}`);
       const fullResume = resumeRes.data.data;
+      setCurrentResume(fullResume);
 
       // 2. ATS Score check
       const scoreRes = await API.post('/ats/score', { resume: fullResume });
@@ -103,7 +102,6 @@ const ATSChecker = ({ user }) => {
 
     setTailoringLoading(true);
     try {
-      // Fetch full resume
       const resumeRes = await API.get(`/resumes/${selectedResumeId}`);
       const fullResume = resumeRes.data.data;
       
@@ -123,8 +121,8 @@ const ATSChecker = ({ user }) => {
         setTailoredText(response.data.data);
       }
     } catch (err) {
-      console.error('AI tailing failed:', err);
-      alert('Failed to tailor resume with AI. OpenAI service offline.');
+      console.error('AI tailoring failed:', err);
+      alert('Failed to tailor resume with AI. Gemini service offline.');
     } finally {
       setTailoringLoading(false);
     }
@@ -218,7 +216,7 @@ const ATSChecker = ({ user }) => {
               disabled={loading}
               className="w-full btn-primary flex items-center justify-center gap-2 py-3 text-sm animate-fade-in"
             >
-              {loading ? <FiLoader className="animate-spin" /> : <FiCpu />} Analyze Compatibility
+              {loading ? <FiLoader className="animate-spin" /> : <FiCpu />} Re-run Analysis
             </button>
 
             {error && (
@@ -307,6 +305,40 @@ const ATSChecker = ({ user }) => {
                     </div>
                   )}
                 </div>
+
+                {/* Exctracted Document Text Viewer */}
+                {currentResume && (
+                  <div className="glass-card p-5 rounded-xl space-y-4">
+                    <h3 className="font-bold text-sm text-slate-800 dark:text-white flex items-center gap-2 border-b border-slate-200/50 dark:border-slate-800/50 pb-2">
+                      <FiFileText className="text-primary-500" /> Extracted Resume Content
+                    </h3>
+                    {currentResume.isUploaded ? (
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                          <div className="truncate">File Name: <span className="text-slate-800 dark:text-slate-200 font-mono font-normal normal-case">{currentResume.fileName}</span></div>
+                          <div>File Size: <span className="text-slate-800 dark:text-slate-200 font-normal">{Math.round(currentResume.fileSize / 1024)} KB</span></div>
+                          <div>Upload Date: <span className="text-slate-800 dark:text-slate-200 font-normal">{new Date(currentResume.createdAt).toLocaleDateString()}</span></div>
+                        </div>
+                        <div className="w-full bg-slate-50/60 dark:bg-dark-950/20 border border-slate-200/50 dark:border-slate-800/50 p-4 rounded-lg overflow-y-auto max-h-60 text-xs font-sans whitespace-pre-wrap leading-relaxed select-text text-justify text-slate-700 dark:text-slate-300">
+                          {currentResume.extractedText}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                          <div>Template Style: <span className="text-slate-800 dark:text-slate-200 font-normal font-mono normal-case">{currentResume.templateId}</span></div>
+                          <div>Last Updated: <span className="text-slate-800 dark:text-slate-200 font-normal">{new Date(currentResume.updatedAt).toLocaleDateString()}</span></div>
+                        </div>
+                        <div className="w-full bg-slate-50/60 dark:bg-dark-950/20 border border-slate-200/50 dark:border-slate-800/50 p-4 rounded-lg overflow-y-auto max-h-60 text-xs leading-relaxed select-text">
+                          <p className="font-bold text-slate-900 dark:text-white mb-1.5">{currentResume.personalInfo?.name || 'Untitled Candidate'}</p>
+                          <p className="text-slate-600 dark:text-slate-400 mb-3">{currentResume.personalInfo?.summary || 'No summary profile entered.'}</p>
+                          <p className="font-bold text-slate-800 dark:text-slate-200 text-xs">Skills:</p>
+                          <p className="text-slate-600 dark:text-slate-400 mb-3">{currentResume.skills?.join(', ') || 'No skills entered.'}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Suggestions and Keywords */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
@@ -416,7 +448,7 @@ const ATSChecker = ({ user }) => {
                         <FiCpu className="text-primary-500 animate-pulse" /> AI Resume Optimizer
                       </h3>
                       <p className="text-xs text-slate-500 dark:text-slate-400">
-                        Ask OpenAI to optimize this resume text automatically to bridge missing keywords and align qualifications.
+                        Ask Gemini to optimize this resume text automatically to bridge missing keywords and align qualifications.
                       </p>
 
                       {!tailoredText ? (

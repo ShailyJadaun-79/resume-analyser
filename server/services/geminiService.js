@@ -72,6 +72,7 @@ export const generateSummary = async (role, skills) => {
   }
 
   try {
+    console.log('\n=== [GEMINI API PROMPT: SUMMARY] ===\n', prompt, '\n==================================\n');
     const model = client.getGenerativeModel({ model: 'gemini-1.5-flash' });
     const result = await model.generateContent(prompt);
     return result.response.text().trim();
@@ -91,6 +92,7 @@ export const generateBulletPoints = async (role, details) => {
   }
 
   try {
+    console.log('\n=== [GEMINI API PROMPT: BULLETS] ===\n', prompt, '\n==================================\n');
     const model = client.getGenerativeModel({ model: 'gemini-1.5-flash' });
     const result = await model.generateContent(prompt);
     return result.response.text().trim();
@@ -110,6 +112,7 @@ export const rewriteText = async (text, instruction) => {
   }
 
   try {
+    console.log('\n=== [GEMINI API PROMPT: REWRITE] ===\n', prompt, '\n==================================\n');
     const model = client.getGenerativeModel({ model: 'gemini-1.5-flash' });
     const result = await model.generateContent(prompt);
     return result.response.text().trim();
@@ -129,6 +132,7 @@ export const recommendSkills = async (role) => {
   }
 
   try {
+    console.log('\n=== [GEMINI API PROMPT: SKILLS] ===\n', prompt, '\n==================================\n');
     const model = client.getGenerativeModel({ model: 'gemini-1.5-flash' });
     const result = await model.generateContent(prompt);
     return result.response.text().trim();
@@ -150,6 +154,7 @@ export const generateCoverLetter = async (resumeData, jobDescription) => {
   }
 
   try {
+    console.log('\n=== [GEMINI API PROMPT: COVER LETTER] ===\n', prompt, '\n==================================\n');
     const model = client.getGenerativeModel({ model: 'gemini-1.5-flash' });
     const result = await model.generateContent(prompt);
     return result.response.text().trim();
@@ -169,6 +174,7 @@ export const generateInterviewQuestions = async (resumeData) => {
   }
 
   try {
+    console.log('\n=== [GEMINI API PROMPT: INTERVIEW PREP] ===\n', prompt, '\n==================================\n');
     const model = client.getGenerativeModel({ model: 'gemini-1.5-flash' });
     const result = await model.generateContent(prompt);
     return result.response.text().trim();
@@ -201,6 +207,7 @@ export const analyzeATSWithAI = async (resumeText, jobDescription) => {
   }
 
   try {
+    console.log('\n=== [GEMINI API PROMPT: ATS SCANNER] ===\n', prompt, '\n==================================\n');
     const model = client.getGenerativeModel({ 
       model: 'gemini-1.5-flash',
       generationConfig: { responseMimeType: "application/json" }

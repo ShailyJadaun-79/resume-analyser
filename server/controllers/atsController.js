@@ -74,12 +74,88 @@ export const getATSAnalysis = async (req, res, next) => {
 
     const resumeText = extractResumeText(resume);
 
+    console.log("Resume being analyzed:", resumeText.length);
+
     // Try AI-based analysis first if API key is active
     const aiAnalysis = await analyzeATSWithAI(resumeText, '');
     if (aiAnalysis) {
       return res.status(200).json({
         success: true,
         data: aiAnalysis
+      });
+    }
+
+    // Rule-based fallback scanner for uploaded resumes
+    if (resume.isUploaded) {
+      let score = 100;
+      const formattingIssues = [];
+      const suggestions = [];
+      const weakBullets = [];
+      const grammarAnalysis = [];
+
+      // 1. Text length validation
+      const wordCount = resumeText.split(/\s+/).filter(Boolean).length;
+      if (wordCount < 100) {
+        score -= 30;
+        suggestions.push('The uploaded resume is very short. Ensure you upload a complete resume document containing detailed experience sections.');
+      } else if (wordCount > 1500) {
+        score -= 10;
+        suggestions.push('Your resume is exceptionally long. Modern recruiters prefer concise 1-2 page documents.');
+      }
+
+      // 2. Contact details detection
+      if (!resumeText.includes('@')) {
+        score -= 15;
+        formattingIssues.push('Missing contact email address. Ensure your email is clearly visible in the header.');
+      }
+      const hasPhone = /\b\d{3}[-.]?\d{3}[-.]?\d{4}\b|\b\d{10}\b/.test(resumeText);
+      if (!hasPhone) {
+        score -= 5;
+        formattingIssues.push('Missing phone number.');
+      }
+
+      // 3. Keyword Density Analysis
+      const keywordsFound = {};
+      TECH_KEYWORDS.forEach(kw => {
+        const regex = new RegExp(`\\b${kw}\\b`, 'g');
+        const count = (resumeText.match(regex) || []).length;
+        if (count > 0) {
+          keywordsFound[kw] = count;
+        }
+      });
+
+      const uniqueKeywordsCount = Object.keys(keywordsFound).length;
+      if (uniqueKeywordsCount === 0) {
+        score -= 25;
+        suggestions.push('No technical keywords detected. Add relevant frameworks, programming languages, and toolsets.');
+      } else if (uniqueKeywordsCount < 5) {
+        score -= 10;
+        suggestions.push('Low technical keyword density. List modern software frameworks and technical skills in your document.');
+      }
+
+      // 4. Bullet verbs density check
+      const verbsFound = [];
+      STRONG_ACTION_VERBS.forEach(verb => {
+        const regex = new RegExp(`\\b${verb}\\b`, 'i');
+        if (regex.test(resumeText)) {
+          verbsFound.push(verb);
+        }
+      });
+      if (verbsFound.length < 3) {
+        score -= 15;
+        suggestions.push('Incorporate strong action verbs like "Led", "Engineered", or "Implemented" to showcase your achievements.');
+      }
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          score: Math.max(score, 10),
+          formattingAnalysis: formattingIssues,
+          grammarAnalysis,
+          weakBulletPoints: weakBullets,
+          suggestions,
+          keywordDensity: keywordsFound
+        }
       });
     }
 
