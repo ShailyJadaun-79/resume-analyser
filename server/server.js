@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
+import mongoose from 'mongoose';
 import connectDB from './config/db.js';
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 import authRoutes from './routes/authRoutes.js';
@@ -15,7 +16,7 @@ import adminRoutes from './routes/adminRoutes.js';
 dotenv.config();
 
 // Validate critical environment variables at startup
-const requiredEnvVars = ['MONGO_URI', 'JWT_SECRET', 'GEMINI_API_KEY'];
+const requiredEnvVars = ['MONGO_URI', 'JWT_SECRET'];
 const missingVars = requiredEnvVars.filter((key) => !process.env[key]);
 if (missingVars.length > 0) {
   console.error(`\n[Startup Error] ❌ Missing required environment variables: ${missingVars.join(', ')}`);
@@ -23,9 +24,14 @@ if (missingVars.length > 0) {
   process.exit(1);
 }
 
+if (!process.env.GEMINI_API_KEY) {
+  console.warn(`\n[Startup Warning] ⚠️  GEMINI_API_KEY is missing. AI features will be disabled.`);
+}
+
 // --- Async bootstrap function starts the server ---
 const startServer = async () => {
-  await connectDB();
+  // Start DB connection in the background so the server listens instantly
+  connectDB();
 
   const app = express();
 
@@ -35,8 +41,8 @@ const startServer = async () => {
   // CORS Configuration
   const corsOptions = {
     origin: [
-      'http://localhost:5173',      // Vite default port
-      'http://127.0.0.1:5173',
+      /^http:\/\/localhost:\d+$/,
+      /^http:\/\/127\.0\.0\.1:\d+$/
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
@@ -64,12 +70,22 @@ const startServer = async () => {
 
   // Health Check API Route
   app.get('/api/v1/health', (req, res) => {
-    res.status(200).json({
-      status: 'healthy',
+    const dbState = mongoose.connection.readyState;
+    const states = {
+      0: 'disconnected',
+      1: 'connected',
+      2: 'connecting',
+      3: 'disconnecting',
+    };
+    const dbStatus = states[dbState] || 'unknown';
+    const isHealthy = dbState === 1;
+
+    res.status(isHealthy ? 200 : 503).json({
+      status: isHealthy ? 'healthy' : 'degraded',
       timestamp: new Date().toISOString(),
       env: process.env.NODE_ENV,
       uptime: Math.round(process.uptime()),
-      database: 'connected',
+      database: dbStatus,
     });
   });
 

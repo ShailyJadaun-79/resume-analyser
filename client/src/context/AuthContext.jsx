@@ -22,7 +22,19 @@ export const AuthProvider = ({ children }) => {
           }
         } catch (err) {
           console.error('[Session validation failed]:', err);
-          handleLogout();
+          if (err.response && err.response.status === 401) {
+            handleLogout();
+          } else {
+            // Fallback to local storage on network/server errors to prevent aggressive logouts
+            const savedUser = localStorage.getItem('user');
+            if (savedUser) {
+              try {
+                setUser(JSON.parse(savedUser));
+              } catch (e) {
+                handleLogout();
+              }
+            }
+          }
         }
       }
       setLoading(false);

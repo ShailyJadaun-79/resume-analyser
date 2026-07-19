@@ -6,13 +6,13 @@ import { extractTextFromBuffer } from '../utils/textExtractor.js';
 // @access  Private
 export const createResume = async (req, res, next) => {
   try {
-    const { title, templateId } = req.body;
+    const { title, templateId, resumeData } = req.body;
 
     const resume = await Resume.create({
       userId: req.user._id,
       title: title || 'My Resume',
       templateId: templateId || 'modern',
-      personalInfo: {
+      personalInfo: resumeData?.personalInfo || {
         name: req.user.name,
         email: req.user.email,
         phone: '',
@@ -22,6 +22,14 @@ export const createResume = async (req, res, next) => {
         linkedin: '',
         summary: '',
       },
+      experience: resumeData?.experience || [],
+      education: resumeData?.education || [],
+      projects: resumeData?.projects || [],
+      skills: resumeData?.skills || [],
+      certifications: resumeData?.certifications || [],
+      languages: resumeData?.languages || [],
+      achievements: resumeData?.achievements || [],
+      references: resumeData?.references || []
     });
 
     res.status(201).json({

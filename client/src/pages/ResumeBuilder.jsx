@@ -3,8 +3,11 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import API from '../services/api';
 import { 
   FiArrowLeft, FiSave, FiPrinter, FiCpu, FiPlus, FiTrash2, 
-  FiLayers, FiSliders, FiFileText, FiLoader, FiCheck, FiChevronDown, FiChevronUp 
+  FiLayers, FiSliders, FiFileText, FiLoader, FiCheck, FiChevronDown, FiChevronUp, FiLayout, FiX
 } from 'react-icons/fi';
+import { TemplateRegistry } from '../templates/TemplateRegistry';
+import { STATIC_TEMPLATES } from '../templates/TemplateConstants';
+import TemplatePreview from '../components/TemplatePreview';
 
 const ResumeBuilder = () => {
   const { id: resumeId } = useParams();
@@ -15,6 +18,7 @@ const ResumeBuilder = () => {
   const [saving, setSaving] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [activeSection, setActiveSection] = useState('personal');
+  const [isTemplateGalleryOpen, setIsTemplateGalleryOpen] = useState(false);
   
   // Custom templates rendering rules
   const [styles, setStyles] = useState({
@@ -231,6 +235,12 @@ const ResumeBuilder = () => {
         </div>
 
         <div className="flex items-center gap-3">
+          <button 
+            onClick={() => setIsTemplateGalleryOpen(true)}
+            className="btn-secondary py-2 px-4 text-xs flex items-center gap-1.5"
+          >
+            <FiLayout /> Change Template
+          </button>
           <button onClick={handlePrint} className="btn-secondary py-2 px-4 text-xs flex items-center gap-1.5">
             <FiPrinter /> PDF / Export
           </button>
@@ -729,124 +739,13 @@ const ResumeBuilder = () => {
           {/* Printable Sheet */}
           <div 
             id="printable-resume"
-            style={{ 
-              fontFamily: styles.fontFamily === 'serif' ? 'Merriweather, serif' : 
-                          styles.fontFamily === 'mono' ? 'Fira Code, monospace' : 
-                          styles.fontFamily === 'outfit' ? 'Outfit, sans-serif' : 'Inter, sans-serif',
-              borderColor: styles.color
-            }}
-            className={`w-[210mm] min-h-[297mm] h-fit bg-white dark:bg-white text-slate-900 p-12 shadow-xl border-t-8 rounded-sm select-text flex flex-col justify-between print:shadow-none print:w-full print:min-h-0 print:border-none print:p-0`}
+            className="print:m-0 print:p-0 print:w-full print:shadow-none print:border-none relative"
           >
-            {/* Header info */}
-            <div className="space-y-4">
-              <div className="text-center space-y-1">
-                <h1 className="text-3xl font-extrabold tracking-tight font-outfit text-slate-900">
-                  {resume.personalInfo?.name || 'Candidate Name'}
-                </h1>
-                <p className="text-sm font-semibold tracking-wide" style={{ color: styles.color }}>
-                  {resume.title}
-                </p>
-                <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-slate-500 pt-1 border-b pb-3">
-                  {resume.personalInfo?.email && <span>{resume.personalInfo.email}</span>}
-                  {resume.personalInfo?.phone && <span>{resume.personalInfo.phone}</span>}
-                  {resume.personalInfo?.location && <span>{resume.personalInfo.location}</span>}
-                  {resume.personalInfo?.website && <span className="font-mono">{resume.personalInfo.website}</span>}
-                  {resume.personalInfo?.github && <span className="font-mono">github: {resume.personalInfo.github}</span>}
-                  {resume.personalInfo?.linkedin && <span className="font-mono">in: {resume.personalInfo.linkedin}</span>}
-                </div>
-              </div>
-
-              {/* Summary */}
-              {resume.personalInfo?.summary && (
-                <div className="space-y-1.5">
-                  <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: styles.color }}>
-                    Summary
-                  </h3>
-                  <p className="text-xs text-slate-700 leading-relaxed text-justify">
-                    {resume.personalInfo.summary}
-                  </p>
-                </div>
-              )}
-
-              {/* Experience list */}
-              {resume.experience?.length > 0 && (
-                <div className="space-y-3">
-                  <h3 className="text-xs font-bold uppercase tracking-wider border-b pb-1" style={{ color: styles.color, borderColor: `${styles.color}20` }}>
-                    Work Experience
-                  </h3>
-                  
-                  <div className="space-y-3">
-                    {resume.experience.map((exp, idx) => (
-                      <div key={idx} className="space-y-1">
-                        <div className="flex items-center justify-between text-xs font-bold text-slate-800">
-                          <span>{exp.position} — <span className="opacity-80">{exp.company}</span></span>
-                          <span className="font-normal text-[11px] text-slate-500">{exp.startDate} - {exp.current ? 'Present' : exp.endDate}</span>
-                        </div>
-                        <pre className="text-xs text-slate-600 leading-relaxed font-sans whitespace-pre-wrap max-w-full text-justify">
-                          {exp.description}
-                        </pre>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Projects list */}
-              {resume.projects?.length > 0 && (
-                <div className="space-y-3">
-                  <h3 className="text-xs font-bold uppercase tracking-wider border-b pb-1" style={{ color: styles.color, borderColor: `${styles.color}20` }}>
-                    Technical Projects
-                  </h3>
-
-                  <div className="space-y-3">
-                    {resume.projects.map((proj, idx) => (
-                      <div key={idx} className="space-y-1">
-                        <div className="flex items-center justify-between text-xs font-bold text-slate-800">
-                          <span>{proj.name} {proj.link && <span className="font-normal font-mono text-[10px] text-slate-400">({proj.link})</span>}</span>
-                          <span className="font-semibold text-[10px] text-slate-500">{proj.technologies?.join(' | ')}</span>
-                        </div>
-                        <p className="text-xs text-slate-600 leading-relaxed text-justify">
-                          {proj.description}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Skills list */}
-              {resume.skills?.length > 0 && (
-                <div className="space-y-2">
-                  <h3 className="text-xs font-bold uppercase tracking-wider border-b pb-1" style={{ color: styles.color, borderColor: `${styles.color}20` }}>
-                    Technical Skills & Frameworks
-                  </h3>
-                  <p className="text-xs text-slate-700 leading-relaxed">
-                    {resume.skills.join(', ')}
-                  </p>
-                </div>
-              )}
-
-              {/* Education list */}
-              {resume.education?.length > 0 && (
-                <div className="space-y-3">
-                  <h3 className="text-xs font-bold uppercase tracking-wider border-b pb-1" style={{ color: styles.color, borderColor: `${styles.color}20` }}>
-                    Education
-                  </h3>
-
-                  <div className="space-y-2">
-                    {resume.education.map((edu, idx) => (
-                      <div key={idx} className="flex justify-between items-start text-xs text-slate-700">
-                        <div>
-                          <span className="font-bold text-slate-800">{edu.school}</span>
-                          <p className="text-[11px] mt-0.5">{edu.degree} {edu.fieldOfStudy && `in ${edu.fieldOfStudy}`}</p>
-                        </div>
-                        <span className="text-[11px] text-slate-500">{edu.startDate} - {edu.endDate}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
+            {TemplateRegistry[resume.templateId] ? (
+              React.createElement(TemplateRegistry[resume.templateId], { resume, styles })
+            ) : (
+              React.createElement(TemplateRegistry['modern-ats'], { resume, styles })
+            )}
 
             <div className="text-[9px] text-center text-slate-400 pt-6 border-t mt-6 print:hidden">
               Created with ResumeAI Builder. Unlimited PDF exports.
@@ -879,6 +778,57 @@ const ResumeBuilder = () => {
           }
         }
       `}</style>
+
+      {/* Template Gallery Modal */}
+      {isTemplateGalleryOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-6 print:hidden animate-fade-in">
+          <div className="bg-slate-50 dark:bg-dark-950 w-full max-w-7xl h-[90vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden relative">
+            <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-dark-900 z-10">
+              <div>
+                <h2 className="text-2xl font-bold font-outfit text-slate-900 dark:text-white">Change Template</h2>
+                <p className="text-sm text-slate-500 mt-1">Select a new layout. Your data will be preserved automatically.</p>
+              </div>
+              <button 
+                onClick={() => setIsTemplateGalleryOpen(false)}
+                className="p-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full transition-colors"
+              >
+                <FiX className="text-xl" />
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 auto-rows-[minmax(320px,auto)]">
+                {STATIC_TEMPLATES.map((tpl) => (
+                  <div key={tpl.id} className="group relative bg-white dark:bg-dark-900 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col cursor-pointer" onClick={() => {
+                      const updated = { ...resume, templateId: tpl.slug };
+                      setResume(updated);
+                      triggerAutoSave(updated);
+                      setIsTemplateGalleryOpen(false);
+                    }}>
+                    
+                    <div className="h-48 bg-slate-100 dark:bg-dark-950 flex items-center justify-center relative overflow-hidden">
+                      <TemplatePreview slug={tpl.slug} />
+                      <div className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 backdrop-blur-sm transition-all duration-300 flex items-center justify-center z-20">
+                        <span className="bg-primary-500 text-white px-6 py-2.5 rounded-full font-bold text-sm shadow-lg flex items-center gap-2">
+                          <FiCheck /> Use Template
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="p-5 flex-1 flex flex-col justify-between">
+                      <div>
+                        <span className="text-[10px] uppercase font-bold tracking-wider text-primary-500">{tpl.category}</span>
+                        <h3 className="font-bold text-lg text-slate-900 dark:text-white mt-1 group-hover:text-primary-500 transition-colors">{tpl.name}</h3>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">{tpl.desc}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
